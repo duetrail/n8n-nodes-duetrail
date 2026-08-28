@@ -73,17 +73,29 @@ jobs:
 
       # Trusted publishing failing open would publish without provenance, and
       # n8n refuses to verify a package that has none. Check rather than assume.
+      #
+      # Read dist.attestations.url from the registry instead of constructing an
+      # attestations URL: npm publishes the authoritative, version-specific link
+      # in the packument, and a guessed path 404s and fails a healthy release.
       - name: Verify provenance was attached
         if: ${{ !inputs.dry_run }}
         run: |
-          node -e "
-            const { name, version } = require('./package.json');
-            const url = 'https://registry.npmjs.org/-/package/' + name + '/attestations';
-            fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('attestations: HTTP ' + r.status)))
-              .then(d => {
-                const hit = (d.attestations || []).length || Object.keys(d).length;
-                if (!hit) throw new Error('published without provenance — trusted publishing did not engage');
-                console.log('provenance present for ' + name + '@' + version);
-              })
-              .catch(e => { console.error(e.message); process.exit(1); });
-          "
+          set -e
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          for attempt in 1 2 3 4 5; do
+            URL=$(npm view "$NAME@$VERSION" dist.attestations.url 2>/dev/null || true)
+            if [ -n "$URL" ]; then
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+              if [ "$STATUS" = "200" ]; then
+                echo "provenance verified for $NAME@$VERSION -> $URL"
+                exit 0
+              fi
+              echo "attestation url present but returned HTTP $STATUS (attempt $attempt)"
+            else
+              echo "no dist.attestations yet (attempt $attempt)"
+            fi
+            sleep 10
+          done
+          echo "::error::$NAME@$VERSION has no provenance — trusted publishing did not engage"
+          exit 1
