@@ -1,16 +1,7 @@
-// NodeConnectionType is a TYPE-only export in current n8n-workflow (the runtime
-// value was renamed to NodeConnectionTypes). peerDependencies allows any
-// version, so use the string literal, which is valid against both the old enum
-// and the new string union.
+// NodeConnectionType is type-only in n8n-workflow >=2; the string literal below
+// is valid against both the old enum and the new union. Do not swap it back.
 import type { INodeType, INodeTypeDescription, NodeConnectionType } from 'n8n-workflow';
 
-/**
- * Actions against the DueTrail public API.
- *
- * Declarative (routing-based) rather than programmatic: every operation is a
- * single REST call, so there is no execute() logic worth owning — and the
- * declarative form is what n8n's own reviewers prefer for API nodes.
- */
 export class DueTrail implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'DueTrail',

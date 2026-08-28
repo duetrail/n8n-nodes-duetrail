@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
+    "removeComments": true,
     "sourceMap": false,
     "resolveJsonModule": true,
     "useUnknownInCatchVariables": false

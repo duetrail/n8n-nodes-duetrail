@@ -5,15 +5,7 @@ import type {
   INodeProperties,
 } from 'n8n-workflow';
 
-/**
- * Workspace API key for the DueTrail public API.
- *
- * The key is created in DueTrail under Settings → API keys and sent as a
- * bearer token, which is what the Go service's APIKeyAuth middleware expects.
- * The base URL is duetrail.com rather than the API service directly: the Go
- * service is internal-only, and the documented public path is what stays
- * stable for published connectors.
- */
+/** Workspace API key, created in DueTrail under Settings → API keys. */
 export class DueTrailApi implements ICredentialType {
   name = 'dueTrailApi';
 
@@ -49,7 +41,6 @@ export class DueTrailApi implements ICredentialType {
     },
   };
 
-  // /me is the designated credential check: two cheap reads, no business data.
   test: ICredentialTestRequest = {
     request: {
       baseURL: '={{$credentials.baseUrl}}',

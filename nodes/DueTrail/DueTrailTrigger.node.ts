@@ -1,4 +1,3 @@
-// NodeConnectionType is type-only in current n8n-workflow; see DueTrail.node.ts.
 import type {
   IDataObject,
   IPollFunctions,
@@ -9,7 +8,7 @@ import type {
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 
-/** The event types GET /events can return — domain.automationEventTypes in the API. */
+/** Mirrors domain.automationEventTypes in the API — GET /events returns only these. */
 const EVENT_TYPES = [
   { name: 'Any Event', value: '' },
   { name: 'Promise Created', value: 'promise_created' },
@@ -24,15 +23,7 @@ const EVENT_TYPES = [
   { name: 'Customer Asked a Question', value: 'portal_customer_question' },
 ];
 
-/**
- * Polls the DueTrail public API for collection events.
- *
- * Unlike Zapier and Make — which deduplicate for you — n8n hands the node its
- * own persisted state, so this keeps a cursor: the `next_since` the API
- * returns. That is the API's own contract, and it is deliberate that an empty
- * page returns the caller's cursor unchanged rather than "now", so a quiet
- * period cannot skip an event written moments later.
- */
+/** n8n does not deduplicate for the node, so this persists the API's cursor. */
 export class DueTrailTrigger implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'DueTrail Trigger',
@@ -67,14 +58,12 @@ export class DueTrailTrigger implements INodeType {
     const manualMode = this.getMode() === 'manual';
 
     const qs: Record<string, string | number> = { limit: 100 };
-    // On a first run (or a manual test) send no cursor: the API defaults to the
-    // last 24 hours, which gives a usable sample without replaying history.
+    // No cursor on a first or manual run: the API defaults to the last 24 hours.
     if (staticData.since && !manualMode) {
       qs.since = staticData.since;
     }
 
-    // IDataObject, not Record<string, unknown>: returnJsonArray below will not
-    // accept the latter, because unknown is wider than n8n's GenericValue.
+    // IDataObject, not Record<string, unknown> — returnJsonArray rejects the latter.
     let response: { events?: IDataObject[]; next_since?: string };
     try {
       response = await this.helpers.httpRequest({
@@ -91,8 +80,7 @@ export class DueTrailTrigger implements INodeType {
 
     const events = response.events ?? [];
 
-    // Advance the cursor only on a scheduled run. A manual test must not
-    // consume events the live workflow has not seen yet.
+    // Scheduled runs only: a manual test must not consume unseen events.
     if (!manualMode && response.next_since) {
       staticData.since = response.next_since;
     }

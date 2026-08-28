@@ -1,11 +1,6 @@
-// tsc only emits JavaScript, so the node's non-TS assets have to be copied into
-// dist alongside it:
-//
-//   - the icon, because n8n resolves `file:duetrail.svg` relative to the
-//     compiled node and a missing icon shows as a broken image in the editor;
-//   - the *.node.json codex files, which give each node its category and
-//     documentation link. Without them n8n logs "No codex available for:
-//     dueTrail" at startup and the node shows up uncategorised in the editor.
+// tsc emits only JavaScript, so the icon and the *.node.json codex files have to
+// be copied into dist beside it. Without them n8n shows a broken image and logs
+// "No codex available".
 
 import { cpSync, mkdirSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
