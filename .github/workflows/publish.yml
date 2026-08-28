@@ -32,6 +32,11 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
+      # Node 22 ships npm 10, which predates OIDC trusted publishing. Without
+      # this the publish falls back to looking for a token that no longer
+      # exists, and fails with an unhelpful auth error.
+      - run: npm install -g npm@latest
+
       - run: npm ci --no-audit --no-fund
 
       # tsc --noEmit then the structural tests. The type check is the one that
@@ -60,8 +65,26 @@ jobs:
         if: ${{ inputs.dry_run }}
         run: npm pack --dry-run
 
-      - name: Publish with provenance
+      # No token: the npm package is configured with a Trusted Publisher naming
+      # this repo and this workflow file, so npm authenticates the OIDC token
+      # minted by `id-token: write` above. Provenance is generated automatically.
+      - name: Publish
         if: ${{ !inputs.dry_run }}
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+      # Trusted publishing failing open would publish without provenance, and
+      # n8n refuses to verify a package that has none. Check rather than assume.
+      - name: Verify provenance was attached
+        if: ${{ !inputs.dry_run }}
+        run: |
+          node -e "
+            const { name, version } = require('./package.json');
+            const url = 'https://registry.npmjs.org/-/package/' + name + '/attestations';
+            fetch(url).then(r => r.ok ? r.json() : Promise.reject(new Error('attestations: HTTP ' + r.status)))
+              .then(d => {
+                const hit = (d.attestations || []).length || Object.keys(d).length;
+                if (!hit) throw new Error('published without provenance — trusted publishing did not engage');
+                console.log('provenance present for ' + name + '@' + version);
+              })
+              .catch(e => { console.error(e.message); process.exit(1); });
+          "

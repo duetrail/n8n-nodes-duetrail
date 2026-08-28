@@ -54,9 +54,14 @@ A manual publish produces a package that installs fine but can never be verified
 and burns the version number.
 
 Publish via this repo's **Publish n8n node** workflow (`.github/workflows/publish.yml`),
-which type-checks, tests, verifies the package shape and publishes with
-`--provenance`. It needs an npm automation token in the `NPM_TOKEN` repository
-secret. Run it once with `dry_run` on to confirm the tarball, then again with it off.
+which type-checks, tests and verifies the package shape first. **No token is stored
+anywhere:** the npm package has a Trusted Publisher naming this repo and
+`publish.yml`, so npm authenticates the OIDC token GitHub mints for the run and
+attaches provenance automatically. Run it once with `dry_run` on to check the
+tarball, then again with it off — it fails the run if provenance did not attach.
+
+(0.1.0 was published by hand to create the package, so it carries no provenance.
+Submit 0.1.1 or later for verification.)
 
 Then submit for verification at the n8n Creator Portal so the node appears in the
 in-app browser: <https://creators.n8n.io/nodes>
