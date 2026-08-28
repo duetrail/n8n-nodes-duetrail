@@ -1,0 +1,54 @@
+{
+  "name": "n8n-nodes-duetrail",
+  "version": "0.1.0",
+  "description": "n8n community node for DueTrail — trigger on overdue-invoice collection events, create invoices, record payments and add case notes.",
+  "keywords": [
+    "n8n-community-node-package",
+    "duetrail",
+    "accounts-receivable",
+    "invoices",
+    "collections",
+    "dunning"
+  ],
+  "license": "MIT",
+  "homepage": "https://duetrail.com",
+  "author": {
+    "name": "DueTrail",
+    "email": "support@duetrail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/duetrail/n8n-nodes-duetrail.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && node scripts/copy-icons.mjs",
+    "dev": "tsc --watch",
+    "lint": "tsc --noEmit",
+    "test": "tsc --noEmit && node --test test/*.test.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/DueTrailApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/DueTrail/DueTrail.node.js",
+      "dist/nodes/DueTrail/DueTrailTrigger.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "n8n-workflow": "*",
+    "typescript": "^5.4.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "bugs": {
+    "url": "https://github.com/duetrail/n8n-nodes-duetrail/issues"
+  }
+}
