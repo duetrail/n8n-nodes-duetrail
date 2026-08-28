@@ -39,12 +39,11 @@ jobs:
 
       - run: npm ci --no-audit --no-fund
 
-      # tsc --noEmit then the structural tests. The type check is the one that
-      # matters: the structural tests read the TypeScript as text and cannot
-      # tell whether it compiles.
+      # `npm test` builds first, then runs the tests. The build is not a separate
+      # step because the runtime tests require dist/ — running them in the wrong
+      # order passes locally, where dist/ is left over from a previous build, and
+      # fails only in CI on a clean checkout.
       - run: npm test
-
-      - run: npm run build
 
       # Verified nodes may not ship runtime dependencies, and the tarball must
       # carry both nodes plus the icon. Fail here rather than at review.
